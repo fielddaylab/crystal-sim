@@ -7,6 +7,8 @@ var GamePlayScene = function(game, stage)
   var ctx = canv.context;
 
   var ar = 0.5;
+  var speed = 0.02;
+
   var Atom = function(x,y)
   {
     var self = this;
@@ -97,11 +99,11 @@ var GamePlayScene = function(game, stage)
       self.pos.x += self.force_pos.x;
       self.pos.y += self.force_pos.y;
       self.force_pos.x = 0;
-      self.force_pos.y = 0;
+      self.force_pos.y = speed;
       self.neg.x += self.force_neg.x;
       self.neg.y += self.force_neg.y;
       self.force_neg.x = 0;
-      self.force_neg.y = 0;
+      self.force_neg.y = speed;
     }
 
     //keep in box
@@ -147,22 +149,36 @@ var GamePlayScene = function(game, stage)
   var mols = [];
   var moldrop_t = 1.1;
   var tick_t = 10;
+  var scale = 20;
+
+  var clicker;
+  var screen_btn;
 
   self.ready = function()
   {
+    clicker = new Clicker({source:stage.dispCanv.canvas});
+    screen_btn = {x:0,y:0,w:canvas.width,h:canvas.height,click:function(evt) { } };
   };
 
   self.tick = function()
   {
+    clicker.filter(screen_btn);
+    clicker.flush();
     //tick_t += 0.1;
     //if(tick_t > 1) tick_t -= 1.;
     //else return;
 
-    moldrop_t += 0.01;
+    moldrop_t += speed/2.;
     if(moldrop_t > 1)
     {
       moldrop_t -= 1;
-      mols[mols.length] = new Mol(rand0()*10.,rand0()*10.,rand0()*10.,rand0()*10.);
+      //mols[mols.length] = new Mol(rand0()*10.,rand0()*10.,rand0()*10.,rand0()*10.);
+      mols[mols.length] = new Mol(
+        rand0()* canv.width/scale/2,
+                -canv.height/scale/2,
+        rand0()* canv.width/scale/2,
+                -canv.height/scale/2
+      );
       /*
       var d = 0.5;
       y = 4;
@@ -177,8 +193,8 @@ var GamePlayScene = function(game, stage)
     }
 
     //noise
-    //for(var i = 0; i < mols.length; i++)
-      //mols[i].noise();
+    for(var i = 0; i < mols.length; i++)
+      mols[i].noise();
 
     //affect each to each other
     for(var i = 0; i < mols.length; i++)
@@ -195,7 +211,7 @@ var GamePlayScene = function(game, stage)
 
     //clamp
     for(var i = 0; i < mols.length; i++)
-      mols[i].clamp(-5,5,-5,5);
+      mols[i].clamp(-canv.width/scale/2,canv.width/scale/2,-canv.height/scale/2,canv.height/scale/2);
 
     //resolve each
     for(var i = 0; i < mols.length; i++)
@@ -226,29 +242,32 @@ var GamePlayScene = function(game, stage)
 
   };
 
-  var s = 10;
-  var p_img = GenIcon(s,s);
+  var p_img = GenIcon(scale,scale);
   p_img.context.fillStyle = "#00FF00";
   p_img.context.beginPath();
-  p_img.context.arc(s/2,s/2,s/2,0,2*Math.PI);
+  p_img.context.arc(scale/2,scale/2,scale/2,0,2*Math.PI);
   p_img.context.fill();
-  var n_img = GenIcon(s,s);
+  var n_img = GenIcon(scale,scale);
   n_img.context.fillStyle = "#FF0000";
   n_img.context.beginPath();
-  n_img.context.arc(s/2,s/2,s/2,0,2*Math.PI);
+  n_img.context.arc(scale/2,scale/2,scale/2,0,2*Math.PI);
   n_img.context.fill();
   var drawMol = function(mol)
   {
-    var x;
-    var y;
-    var w = 10;
-    var h = 10;
-    x = mol.pos.x*w + canv.width /2 - w/2;
-    y = mol.pos.y*h + canv.height/2 - h/2;
-    ctx.drawImage(p_img,x,y,w,h);
-    x = mol.neg.x*w + canv.width /2 - w/2;
-    y = mol.neg.y*h + canv.height/2 - h/2;
-    ctx.drawImage(n_img,x,y,w,h);
+    var w = scale;
+    var h = scale;
+    var px = mol.pos.x*w + canv.width /2;
+    var py = mol.pos.y*h + canv.height/2;
+    var nx = mol.neg.x*w + canv.width /2;
+    var ny = mol.neg.y*h + canv.height/2;
+    ctx.drawImage(p_img,px-w/2,py-h/2,w,h);
+    ctx.drawImage(n_img,nx-w/2,ny-h/2,w,h);
+    ctx.strokeStyle = "#000000";
+    ctx.beginPath();
+    ctx.moveTo(px,py);
+    ctx.lineTo(nx,ny);
+    ctx.stroke();
+
   }
   self.draw = function()
   {
