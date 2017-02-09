@@ -8,7 +8,7 @@ var Clicker = function(init)
   var self = this;
   doMapInitDefaults(self,init,default_init);
 
-  var evts = []
+  var evts = [];
   self.attach = function() //will get auto-called at creation
   {
     if(platform == "PC")          self.source.addEventListener('mousedown', click, false);
@@ -27,10 +27,12 @@ var Clicker = function(init)
   }
   self.filter = function(clickable)
   {
+    var evt;
     for(var i = 0; i < evts.length; i++)
     {
-      if(clicked(clickable, evts[i]))
-        clickable.click(evts[i]);
+      evt = evts[i];
+      if((clickable.shouldClick && clickable.shouldClick(evt)) || doEvtWithinBB(evt, clickable))
+        clickable.click(evt);
     }
   }
   self.flush = function()
@@ -39,11 +41,6 @@ var Clicker = function(init)
   }
 
   self.attach();
-}
-
-var clicked = function(clickable, evt)
-{
-  return ptWithinObj(clickable, evt.doX, evt.doY);
 }
 
 //example clickable- just needs x,y,w,h and click callback
@@ -55,6 +52,10 @@ var Clickable = function(args)
   self.y = args.y ? args.y : 0;
   self.w = args.w ? args.w : 0;
   self.h = args.h ? args.h : 0;
+  self.shouldClick = args.shouldClick ? args.shouldClick : function(evt) //optional
+  {
+    return doEvtWithinBB(evt, self);
+  }
   self.click = args.click ? args.click : function(){};
 
   //nice for debugging purposes

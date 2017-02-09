@@ -9,6 +9,20 @@ var GamePlayScene = function(game, stage)
   var ar = 0.5;
   var speed = 0.02;
 
+  var mols = [];
+  var moldrop_t = 1.1;
+  var tick_t = 10;
+  var scale = 20;
+
+  var clicker;
+  var dragger;
+  var screen_btn;
+
+  var worldToScreenX = function(x) { return x*scale + canv.width /2; }
+  var worldToScreenY = function(y) { return y*scale + canv.height/2; }
+  var screenToWorldX = function(x) { return (x-canv.width /2)/scale; }
+  var screenToWorldY = function(y) { return (y-canv.height/2)/scale; }
+
   var Atom = function(x,y)
   {
     var self = this;
@@ -45,6 +59,35 @@ var GamePlayScene = function(game, stage)
     self.force_neg = new Atom(0,0);
     self.pos = new Atom(px,py);
     self.neg = new Atom(nx,ny);
+
+    self.shouldDrag = function(evt)
+    {
+      console.log("check");
+      if(distsqr(self.pos.x,self.pos.y,screenToWorldX(evt.doX),screenToWorldY(evt.doY)) < 2*ar*2*ar)
+      {
+        console.log("YEP");
+        return true;
+      }
+      return false;
+    }
+    self.dragStart = function(evt)
+    {
+      self.force_pos.x = screenToWorldX(evt.doX);
+      self.force_pos.y = screenToWorldY(evt.doY);
+      self.force_neg.x = screenToWorldX(evt.doX);
+      self.force_neg.y = screenToWorldY(evt.doY);
+    }
+    self.drag = function(evt)
+    {
+      self.force_pos.x = screenToWorldX(evt.doX);
+      self.force_pos.y = screenToWorldY(evt.doY);
+      self.force_neg.x = screenToWorldX(evt.doX);
+      self.force_neg.y = screenToWorldY(evt.doY);
+    }
+    self.dragEnd = function(evt)
+    {
+
+    }
 
     self.noise = function()
     {
@@ -146,17 +189,11 @@ var GamePlayScene = function(game, stage)
       return budged;
     }
   }
-  var mols = [];
-  var moldrop_t = 1.1;
-  var tick_t = 10;
-  var scale = 20;
-
-  var clicker;
-  var screen_btn;
 
   self.ready = function()
   {
     clicker = new Clicker({source:stage.dispCanv.canvas});
+    dragger = new Dragger({source:stage.dispCanv.canvas});
     screen_btn = {x:0,y:0,w:canvas.width,h:canvas.height,click:function(evt) { } };
   };
 
@@ -164,10 +201,19 @@ var GamePlayScene = function(game, stage)
   {
     clicker.filter(screen_btn);
     clicker.flush();
+    for(var i = 0; i < mols.length; i++)
+      dragger.filter(mols[i]);
+    dragger.flush();
     //tick_t += 0.1;
     //if(tick_t > 1) tick_t -= 1.;
     //else return;
 
+    for(var i = 0; i < 4; i++)
+      self.ticksim();
+  }
+
+  self.ticksim = function()
+  {
     moldrop_t += speed/2.;
     if(moldrop_t > 1)
     {
@@ -256,10 +302,10 @@ var GamePlayScene = function(game, stage)
   {
     var w = scale;
     var h = scale;
-    var px = mol.pos.x*w + canv.width /2;
-    var py = mol.pos.y*h + canv.height/2;
-    var nx = mol.neg.x*w + canv.width /2;
-    var ny = mol.neg.y*h + canv.height/2;
+    var px = worldToScreenX(mol.pos.x);
+    var py = worldToScreenX(mol.pos.y);
+    var nx = worldToScreenX(mol.neg.x);
+    var ny = worldToScreenX(mol.neg.y);
     ctx.drawImage(p_img,px-w/2,py-h/2,w,h);
     ctx.drawImage(n_img,nx-w/2,ny-h/2,w,h);
     ctx.strokeStyle = "#000000";

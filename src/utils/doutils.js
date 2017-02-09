@@ -53,3 +53,8 @@ function doSetPosOnEvent(evt)
   }
 }
 
+function doEvtWithinBB(evt, bb)
+{
+  return (evt.doX >= bb.x && evt.doX <= bb.x+bb.w && evt.doY >= bb.y && evt.doY <= bb.y+bb.h);
+}
+

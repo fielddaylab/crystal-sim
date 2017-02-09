@@ -107,11 +107,11 @@ var objWithinObj = function(obja, objb)
   console.log("not done!");
   return false;
 }
-var worldPtWithin = function(ptx, pty, wx, wy, ww, wh)
+var worldPtWithin = function(wx, wy, ww, wh, ptx, pty)
 {
   return (ptx >= wx-(ww/2) && ptx <= wx+(ww/2) && pty >= wy-(wh/2) && pty <= wy+(wh/2));
 }
-var worldPtWithinObj = function(ptx, pty, obj)
+var worldPtWithinObj = function(obj, ptx, pty)
 {
   return (ptx >= obj.wx-(obj.ww/2) && ptx <= obj.wx+(obj.ww/2) && pty >= obj.wy-(obj.wh/2) && pty <= obj.wy+(obj.wh/2));
 }
