@@ -110,6 +110,7 @@ var Dragger = function(init)
         {
           if(draggable.dragging)
             draggable.dragEnd(evt);
+          draggable.dragging = false;
         }
         break;
       }

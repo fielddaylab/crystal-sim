@@ -10,6 +10,7 @@ var GamePlayScene = function(game, stage)
   var speed = 0.02;
 
   var mols = [];
+  var dragging_mol = false;
   var moldrop_t = 1.1;
   var tick_t = 10;
   var scale = 20;
@@ -60,33 +61,37 @@ var GamePlayScene = function(game, stage)
     self.pos = new Atom(px,py);
     self.neg = new Atom(nx,ny);
 
+    var dsqr = 2*ar*2*ar;
     self.shouldDrag = function(evt)
     {
-      console.log("check");
-      if(distsqr(self.pos.x,self.pos.y,screenToWorldX(evt.doX),screenToWorldY(evt.doY)) < 2*ar*2*ar)
+      if(dragging_mol) return false;
+      if(
+        distsqr(self.pos.x,self.pos.y,screenToWorldX(evt.doX),screenToWorldY(evt.doY)) < dsqr ||
+        distsqr(self.neg.x,self.neg.y,screenToWorldX(evt.doX),screenToWorldY(evt.doY)) < dsqr
+      )
       {
-        console.log("YEP");
+        dragging_mol = self;
         return true;
       }
       return false;
     }
     self.dragStart = function(evt)
     {
-      self.force_pos.x = screenToWorldX(evt.doX);
-      self.force_pos.y = screenToWorldY(evt.doY);
-      self.force_neg.x = screenToWorldX(evt.doX);
-      self.force_neg.y = screenToWorldY(evt.doY);
+      self.pos.x = screenToWorldX(evt.doX);
+      self.pos.y = screenToWorldY(evt.doY);
+      self.neg.x = screenToWorldX(evt.doX);
+      self.neg.y = screenToWorldY(evt.doY);
     }
     self.drag = function(evt)
     {
-      self.force_pos.x = screenToWorldX(evt.doX);
-      self.force_pos.y = screenToWorldY(evt.doY);
-      self.force_neg.x = screenToWorldX(evt.doX);
-      self.force_neg.y = screenToWorldY(evt.doY);
+      self.pos.x = screenToWorldX(evt.doX);
+      self.pos.y = screenToWorldY(evt.doY);
+      self.neg.x = screenToWorldX(evt.doX);
+      self.neg.y = screenToWorldY(evt.doY);
     }
     self.dragEnd = function(evt)
     {
-
+      dragging_mol = false;
     }
 
     self.noise = function()
@@ -142,11 +147,13 @@ var GamePlayScene = function(game, stage)
       self.pos.x += self.force_pos.x;
       self.pos.y += self.force_pos.y;
       self.force_pos.x = 0;
-      self.force_pos.y = speed;
+      if(!self.dragging) self.force_pos.y = speed;
+      else               self.force_pos.y = 0;
       self.neg.x += self.force_neg.x;
       self.neg.y += self.force_neg.y;
       self.force_neg.x = 0;
-      self.force_neg.y = speed;
+      if(!self.dragging) self.force_neg.y = speed;
+      else               self.force_neg.y = 0;
     }
 
     //keep in box
@@ -313,7 +320,6 @@ var GamePlayScene = function(game, stage)
     ctx.moveTo(px,py);
     ctx.lineTo(nx,ny);
     ctx.stroke();
-
   }
   self.draw = function()
   {
