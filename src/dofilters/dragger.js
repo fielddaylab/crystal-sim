@@ -109,7 +109,7 @@ var Dragger = function(init)
         case EVT_TYPE_UP:
         {
           if(draggable.dragging)
-            draggable.dragEnd(evt);
+            draggable.dragFinish(evt);
           draggable.dragging = false;
         }
         break;

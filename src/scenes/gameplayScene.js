@@ -7,17 +7,22 @@ var GamePlayScene = function(game, stage)
   var ctx = canv.context;
 
   var ar = 0.5;
-  var speed = 0.02;
+  var speed = 2;
+  var noise = 0.2;
+  var scale = 10;
 
   var mols = [];
   var dragging_mol = false;
   var moldrop_t = 1.1;
   var tick_t = 10;
-  var scale = 20;
 
   var clicker;
   var dragger;
   var screen_btn;
+
+  var noise_slider = new SliderBox(10,10,200,10,0.0, 1.0,noise,function(v){ noise = v });
+  var speed_slider = new SliderBox(10,30,200,10,0.0,10.0,speed,function(v){ speed = v });
+  var scale_slider = new SliderBox(10,50,200,10,1.0,20.0,scale,function(v){ scale = v });
 
   var worldToScreenX = function(x) { return x*scale + canv.width /2; }
   var worldToScreenY = function(y) { return y*scale + canv.height/2; }
@@ -89,17 +94,17 @@ var GamePlayScene = function(game, stage)
       self.neg.x = screenToWorldX(evt.doX);
       self.neg.y = screenToWorldY(evt.doY);
     }
-    self.dragEnd = function(evt)
+    self.dragFinish = function(evt)
     {
       dragging_mol = false;
     }
 
     self.noise = function()
     {
-      self.pos.x += rand0()*0.1;
-      self.neg.y += rand0()*0.1;
-      self.pos.x += rand0()*0.1;
-      self.neg.y += rand0()*0.1;
+      self.pos.x += rand0()*noise;
+      self.pos.y += rand0()*noise;
+      self.neg.x += rand0()*noise;
+      self.neg.y += rand0()*noise;
     }
 
     //find charge forces on pos
@@ -108,37 +113,65 @@ var GamePlayScene = function(game, stage)
       var spostomposx = mol.pos.x-self.pos.x;
       var spostomposy = mol.pos.y-self.pos.y;
       var spostomposlensqr = spostomposx*spostomposx + spostomposy*spostomposy;
-      var spostomposlen = sqrt(spostomposlensqr);
-      spostomposx /= spostomposlen;
-      spostomposy /= spostomposlen;
+      var spostomposlen;
+      if(spostomposlensqr > 0.001)
+      {
+        spostomposlen = sqrt(spostomposlensqr);
+        spostomposx /= spostomposlen;
+        spostomposy /= spostomposlen;
+      }
       var spostomnegx = mol.neg.x-self.pos.x;
       var spostomnegy = mol.neg.y-self.pos.y;
       var spostomneglensqr = spostomnegx*spostomnegx + spostomnegy*spostomnegy;
-      var spostomneglen = sqrt(spostomneglensqr);
-      spostomnegx /= spostomneglen;
-      spostomnegy /= spostomneglen;
+      var spostomneglen;
+      if(spostomneglensqr > 0.001)
+      {
+        spostomneglen = sqrt(spostomneglensqr);
+        spostomnegx /= spostomneglen;
+        spostomnegy /= spostomneglen;
+      }
       var snegtomposx = mol.pos.x-self.neg.x;
       var snegtomposy = mol.pos.y-self.neg.y;
       var snegtomposlensqr = snegtomposx*snegtomposx + snegtomposy*snegtomposy;
-      var snegtomposlen = sqrt(snegtomposlensqr);
-      snegtomposx /= snegtomposlen;
-      snegtomposy /= snegtomposlen;
+      var snegtomposlen;
+      if(snegtomposlensqr > 0.001)
+      {
+        snegtomposlen = sqrt(snegtomposlensqr);
+        snegtomposx /= snegtomposlen;
+        snegtomposy /= snegtomposlen;
+      }
       var snegtomnegx = mol.neg.x-self.neg.x;
       var snegtomnegy = mol.neg.y-self.neg.y;
       var snegtomneglensqr = snegtomnegx*snegtomnegx + snegtomnegy*snegtomnegy;
-      var snegtomneglen = sqrt(snegtomneglensqr);
-      snegtomnegx /= snegtomneglen;
-      snegtomnegy /= snegtomneglen;
+      var snegtomneglen;
+      if(snegtomneglensqr > 0.001)
+      {
+        snegtomneglen = sqrt(snegtomneglensqr);
+        snegtomnegx /= snegtomneglen;
+        snegtomnegy /= snegtomneglen;
+      }
       //can we apply forces individually per dimension?
       var strength = .1;
-      self.force_pos.x += (spostomnegx/spostomneglensqr - spostomposx/spostomposlensqr)*strength;
-      self.force_pos.y += (spostomnegy/spostomneglensqr - spostomposy/spostomposlensqr)*strength;
-      self.force_neg.x += (snegtomposx/snegtomposlensqr - snegtomnegx/snegtomneglensqr)*strength;
-      self.force_neg.y += (snegtomposy/snegtomposlensqr - snegtomnegy/snegtomneglensqr)*strength;
-      mol.force_pos.x  -= (snegtomposx/snegtomposlensqr - spostomposx/spostomposlensqr)*strength;
-      mol.force_pos.y  -= (snegtomposy/snegtomposlensqr - spostomposy/spostomposlensqr)*strength;
-      mol.force_neg.x  -= (spostomnegx/spostomneglensqr - snegtomnegx/snegtomneglensqr)*strength;
-      mol.force_neg.y  -= (spostomnegy/spostomneglensqr - snegtomnegy/snegtomneglensqr)*strength;
+      if(spostomneglensqr > 0.001 && spostomposlensqr > 0.001)
+      {
+        self.force_pos.x += (spostomnegx/spostomneglensqr - spostomposx/spostomposlensqr)*strength;
+        self.force_pos.y += (spostomnegy/spostomneglensqr - spostomposy/spostomposlensqr)*strength;
+      }
+      if(snegtomposlensqr > 0.001 && snegtomneglensqr > 0.001)
+      {
+        self.force_neg.x += (snegtomposx/snegtomposlensqr - snegtomnegx/snegtomneglensqr)*strength;
+        self.force_neg.y += (snegtomposy/snegtomposlensqr - snegtomnegy/snegtomneglensqr)*strength;
+      }
+      if(snegtomposlensqr > 0.001 && spostomposlensqr > 0.001)
+      {
+        mol.force_pos.x  -= (snegtomposx/snegtomposlensqr - spostomposx/spostomposlensqr)*strength;
+        mol.force_pos.y  -= (snegtomposy/snegtomposlensqr - spostomposy/spostomposlensqr)*strength;
+      }
+      if(spostomneglensqr > 0.001 && snegtomneglensqr > 0.001)
+      {
+        mol.force_neg.x  -= (spostomnegx/spostomneglensqr - snegtomnegx/snegtomneglensqr)*strength;
+        mol.force_neg.y  -= (spostomnegy/spostomneglensqr - snegtomnegy/snegtomneglensqr)*strength;
+      }
     }
 
     //apply found charge forces on pos
@@ -147,13 +180,11 @@ var GamePlayScene = function(game, stage)
       self.pos.x += self.force_pos.x;
       self.pos.y += self.force_pos.y;
       self.force_pos.x = 0;
-      if(!self.dragging) self.force_pos.y = speed;
-      else               self.force_pos.y = 0;
+      self.force_pos.y = 0;
       self.neg.x += self.force_neg.x;
       self.neg.y += self.force_neg.y;
       self.force_neg.x = 0;
-      if(!self.dragging) self.force_neg.y = speed;
-      else               self.force_neg.y = 0;
+      self.force_neg.y = 0;
     }
 
     //keep in box
@@ -201,7 +232,12 @@ var GamePlayScene = function(game, stage)
   {
     clicker = new Clicker({source:stage.dispCanv.canvas});
     dragger = new Dragger({source:stage.dispCanv.canvas});
-    screen_btn = {x:0,y:0,w:canvas.width,h:canvas.height,click:function(evt) { } };
+    screen_btn = {x:0,y:0,w:canvas.width,h:canvas.height,click:
+      function(evt)
+      {
+        //mols[mols.length] = new Mol(screenToWorldX(evt.doX),screenToWorldY(evt.doY),screenToWorldX(evt.doX),screenToWorldY(evt.doY));
+      }
+    };
   };
 
   self.tick = function()
@@ -210,27 +246,30 @@ var GamePlayScene = function(game, stage)
     clicker.flush();
     for(var i = 0; i < mols.length; i++)
       dragger.filter(mols[i]);
+    dragger.filter(noise_slider);
+    dragger.filter(speed_slider);
+    dragger.filter(scale_slider);
     dragger.flush();
     //tick_t += 0.1;
     //if(tick_t > 1) tick_t -= 1.;
     //else return;
 
-    for(var i = 0; i < 4; i++)
+    for(var i = 0; i < speed; i++)
       self.ticksim();
   }
 
   self.ticksim = function()
   {
-    moldrop_t += speed/2.;
-    if(moldrop_t > 1)
+    moldrop_t += 0.1;
+    if(moldrop_t > 1 && mols.length < 100)
     {
       moldrop_t -= 1;
       //mols[mols.length] = new Mol(rand0()*10.,rand0()*10.,rand0()*10.,rand0()*10.);
       mols[mols.length] = new Mol(
         rand0()* canv.width/scale/2,
-                -canv.height/scale/2,
+        rand0()*-canv.height/scale/2,
         rand0()* canv.width/scale/2,
-                -canv.height/scale/2
+        rand0()*-canv.height/scale/2
       );
       /*
       var d = 0.5;
@@ -325,6 +364,9 @@ var GamePlayScene = function(game, stage)
   {
     for(var i = 0; i < mols.length; i++)
       drawMol(mols[i]);
+    noise_slider.draw(canv);
+    speed_slider.draw(canv);
+    scale_slider.draw(canv);
   };
 
   self.cleanup = function()
