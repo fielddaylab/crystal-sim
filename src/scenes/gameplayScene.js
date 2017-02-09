@@ -303,9 +303,9 @@ var GamePlayScene = function(game, stage)
     var w = scale;
     var h = scale;
     var px = worldToScreenX(mol.pos.x);
-    var py = worldToScreenX(mol.pos.y);
+    var py = worldToScreenY(mol.pos.y);
     var nx = worldToScreenX(mol.neg.x);
-    var ny = worldToScreenX(mol.neg.y);
+    var ny = worldToScreenY(mol.neg.y);
     ctx.drawImage(p_img,px-w/2,py-h/2,w,h);
     ctx.drawImage(n_img,nx-w/2,ny-h/2,w,h);
     ctx.strokeStyle = "#000000";
