@@ -15,7 +15,7 @@ var GamePlayScene = function(game, stage)
   var strength     = 0.01;
 
   var mols = [];
-  var max_mols = 100;
+  var max_mols = 1000;
   var dragging_mol = false;
   var moldrop_t = 1.1;
   var tick_t = 10;
@@ -36,6 +36,21 @@ var GamePlayScene = function(game, stage)
   var zoom_slider     = new SliderBox(10,y,200,10, 0.1,  10.0, zoom,         function(v){ zoom         = v }); y += 20;
   var bounds_slider   = new SliderBox(10,y,200,10, 0.1,  10.0, bounds_scale, function(v){ bounds_scale = v }); y += 20;
   var strength_slider = new SliderBox(10,y,200,10, 0.0,   0.1, strength,     function(v){ strength     = v }); y += 20;
+
+  var box_rows = 10;
+  var box_cols = 10;
+  var box = [];
+  var cur_box_a;
+  var cur_box_b;
+  var box_valid;
+  var box_item_a;
+  var box_item_b;
+  for(var i = 0; i < box_rows; i++)
+  {
+    box[i] = [];
+    for(var j = 0; j < box_cols; j++)
+      box[i][j] = [];
+  }
 
   var Atom = function(x,y)
   {
@@ -256,16 +271,86 @@ var GamePlayScene = function(game, stage)
       );
     }
 
+    //box
+    var x;
+    var y;
+    for(var i = 0; i < box_rows; i++)
+      for(var j = 0; j < box_cols; j++)
+        box[i][j] = [];
+    for(var i = 0; i < mols.length; i++)
+    {
+      col = clamp(0,box_rows-1,floor((mols[i].pos.wx+bounds.ww/2)/bounds.ww*box_cols));
+      row = clamp(0,box_cols-1,floor((mols[i].pos.wy+bounds.wh/2)/bounds.wh*box_rows));
+      box[row][col].push(mols[i]);
+    }
+
     //noise
     for(var i = 0; i < mols.length; i++)
       mols[i].noise();
 
     //affect each to each other
-    for(var i = 0; i < mols.length; i++)
+    for(var i = 0; i < box_rows; i++)
     {
-      for(var j = i+1; j < mols.length; j++)
+      for(var j = 0; j < box_cols; j++)
       {
-        mols[i].affect(mols[j]);
+        cur_box_a = box[i][j];
+        for(var k = 0; k < 4; k++)
+        {
+          box_valid = false;
+          if(k == 0)
+          {
+            box_valid = true;
+            for(var l = 0; l < cur_box_a.length; l++)
+            {
+              for(var m = l+1; m < cur_box_a.length; m++)
+              {
+                box_item_a = cur_box_a[l];
+                box_item_b = cur_box_a[m];
+                box_item_a.affect(box_item_b);
+              }
+            }
+          }
+          else
+          {
+            switch(k)
+            {
+              case 1:
+                if(j < box_cols-1)
+                {
+                  box_valid = true;
+                  cur_box_b = box[i][j+1];
+                }
+                break;
+              case 2:
+                if(i < box_rows-1)
+                {
+                  box_valid = true;
+                  cur_box_b = box[i+1][j];
+                }
+                break;
+              case 3:
+                if(i < box_rows-1 && j < box_cols-1)
+                {
+                  box_valid = true;
+                  cur_box_b = box[i+1][j+1];
+                }
+                break;
+            }
+
+            if(box_valid)
+            {
+              for(var l = 0; l < cur_box_a.length; l++)
+              {
+                for(var m = 0; m < cur_box_b.length; m++)
+                {
+                  box_item_a = cur_box_a[l];
+                  box_item_b = cur_box_b[m];
+                  box_item_a.affect(box_item_b);
+                }
+              }
+            }
+          }
+        }
       }
     }
 
@@ -289,12 +374,83 @@ var GamePlayScene = function(game, stage)
     while(budged && max)
     {
       budged = false;
-      for(var i = 0; i < mols.length; i++)
+      for(var i = 0; i < box_rows; i++)
       {
-        for(var j = i+1; j < mols.length; j++)
+        for(var j = 0; j < box_cols; j++)
         {
-          if(mols[i].budge(mols[j]))
-            budged = true;
+
+
+
+          //affect each to each other
+          for(var i = 0; i < box_rows; i++)
+          {
+            for(var j = 0; j < box_cols; j++)
+            {
+              cur_box_a = box[i][j];
+              for(var k = 0; k < 4; k++)
+              {
+                box_valid = false;
+                if(k == 0)
+                {
+                  box_valid = true;
+                  for(var l = 0; l < cur_box_a.length; l++)
+                  {
+                    for(var m = l+1; m < cur_box_a.length; m++)
+                    {
+                      box_item_a = cur_box_a[l];
+                      box_item_b = cur_box_a[m];
+                      if(box_item_a.budge(box_item_b))
+                        budged = true;
+                    }
+                  }
+                }
+                else
+                {
+                  switch(k)
+                  {
+                    case 1:
+                      if(j < box_cols-1)
+                      {
+                        box_valid = true;
+                        cur_box_b = box[i][j+1];
+                      }
+                      break;
+                    case 2:
+                      if(i < box_rows-1)
+                      {
+                        box_valid = true;
+                        cur_box_b = box[i+1][j];
+                      }
+                      break;
+                    case 3:
+                      if(i < box_rows-1 && j < box_cols-1)
+                      {
+                        box_valid = true;
+                        cur_box_b = box[i+1][j+1];
+                      }
+                      break;
+                  }
+
+                  if(box_valid)
+                  {
+                    for(var l = 0; l < cur_box_a.length; l++)
+                    {
+                      for(var m = 0; m < cur_box_b.length; m++)
+                      {
+                        box_item_a = cur_box_a[l];
+                        box_item_b = cur_box_b[m];
+                        if(box_item_a.budge(box_item_b))
+                          budged = true;
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+
+
+
         }
       }
       if(budged)
