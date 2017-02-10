@@ -224,6 +224,8 @@ var screenSpace = function(cam, canv, obj)
   obj.x = (((( obj.wx-obj.ww/2)-cam.wx)+(cam.ww/2))/cam.ww)*canv.width;
   obj.y = ((((-obj.wy-obj.wh/2)+cam.wy)+(cam.wh/2))/cam.wh)*canv.height;
 }
+var worldSpaceX = function(cam, canv, x) { return ((x/canv.width)  -0.5)*cam.ww + cam.wx; }
+var worldSpaceY = function(cam, canv, y) { return ((y/canv.height) -0.5)*cam.wh + cam.wy; }
 var worldSpace = function(cam, canv, obj) //opposite of screenspace
 {
   obj.wx = ((obj.x/canv.width) -0.5)*cam.ww + cam.wx;
@@ -232,6 +234,35 @@ var worldSpace = function(cam, canv, obj) //opposite of screenspace
   obj.wh = (obj.h/canv.height)*cam.wh;
 }
 
+function vlensqr(v)
+{
+  return v.x*v.x+v.y*v.y;
+}
+function vlen(v)
+{
+  return Math.sqrt(v.x*v.x+v.y*v.y);
+}
+function vnorm(v)
+{
+  var lensqr = vlensqr(v);
+  var len;
+  if(lensqr > 0.00001)
+  {
+    len = sqrt(lensqr);
+    v.x /= len;
+    v.y /= len;
+  }
+}
+function vmul(d,v)
+{
+  v.x *= d;
+  v.y *= d;
+}
+function vdiv(d,v)
+{
+  v.x /= d;
+  v.y /= d;
+}
 function tldistsqr(a,b)
 {
   var x = b.x-a.x;
