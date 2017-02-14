@@ -224,12 +224,12 @@ var screenSpace = function(cam, canv, obj)
   obj.x = (((( obj.wx-obj.ww/2)-cam.wx)+(cam.ww/2))/cam.ww)*canv.width;
   obj.y = ((((-obj.wy-obj.wh/2)+cam.wy)+(cam.wh/2))/cam.wh)*canv.height;
 }
-var worldSpaceX = function(cam, canv, x) { return ((x/canv.width)  -0.5)*cam.ww + cam.wx; }
-var worldSpaceY = function(cam, canv, y) { return ((y/canv.height) -0.5)*cam.wh + cam.wy; }
+var worldSpaceX = function(cam, canv, x) { return ((x/canv.width) -0.5)* cam.ww + cam.wx; }
+var worldSpaceY = function(cam, canv, y) { return ((y/canv.height)-0.5)*-cam.wh + cam.wy; }
 var worldSpace = function(cam, canv, obj) //opposite of screenspace
 {
-  obj.wx = ((obj.x/canv.width) -0.5)*cam.ww + cam.wx;
-  obj.wy = -((obj.y/canv.height)-0.5)*cam.wh + cam.wy;
+  obj.wx = ((obj.x/canv.width) -0.5)* cam.ww + cam.wx;
+  obj.wy = ((obj.y/canv.height)-0.5)*-cam.wh + cam.wy;
   obj.ww = (obj.w/canv.width)*cam.ww;
   obj.wh = (obj.h/canv.height)*cam.wh;
 }

@@ -15,7 +15,7 @@ var GamePlayScene = function(game, stage)
   var strength     = 0.01;
 
   var mols = [];
-  var max_mols = 1000;
+  var max_mols = 500;
   var dragging_mol = false;
   var moldrop_t = 1.1;
   var tick_t = 10;
@@ -24,6 +24,8 @@ var GamePlayScene = function(game, stage)
   var bounds      = { wx:0, wy:0, ww:2, wh:4 }
   var base_cam    = { wx:0, wy:0, ww:2, wh:4 };
   var cam         = { wx:0, wy:0, ww:2, wh:4 };
+
+  var magnet = { on:0, wx:0, wy:0 };
 
   var clicker;
   var dragger;
@@ -177,6 +179,24 @@ var GamePlayScene = function(game, stage)
       mol.force_neg.wy -= (sp2mn.y-sn2mn.y)*strength;
     }
 
+    var p2m = {x:0,y:0};
+    var n2m = {x:0,y:0};
+    self.drawTowards = function(wx,wy)
+    {
+      p2m.x = self.pos.wx-wx;
+      p2m.y = self.pos.wy-wy;
+      vnorm(p2m);
+
+      n2m.x = self.neg.wx-wx;
+      n2m.y = self.neg.wy-wy;
+      vnorm(n2m);
+
+      self.force_pos.wx -= p2m.x*strength*2;
+      self.force_pos.wy -= p2m.y*strength*2;
+      self.force_neg.wx -= n2m.x*strength*2;
+      self.force_neg.wy -= n2m.y*strength*2;
+    }
+
     //apply found charge forces on pos
     self.apply = function()
     {
@@ -229,6 +249,9 @@ var GamePlayScene = function(game, stage)
     screen_btn = {x:0,y:0,w:canvas.width,h:canvas.height,click:
       function(evt)
       {
+        magnet.on = !magnet.on;
+        magnet.wx = worldSpaceX(cam,canv,evt.doX);
+        magnet.wy = worldSpaceY(cam,canv,evt.doY);
         //mols[mols.length] = new Mol(worldSpaceX(cam,canv,evt.doX),worldSpaceY(cam,canv,evt.doY),worldSpaceX(cam,canv,evt.doX),worldSpaceY(cam,canv,evt.doY));
       }
     };
@@ -352,6 +375,13 @@ var GamePlayScene = function(game, stage)
           }
         }
       }
+    }
+
+    //magnet
+    if(magnet.on)
+    {
+      for(var i = 0; i < mols.length; i++)
+        mols[i].drawTowards(magnet.wx,magnet.wy);
     }
 
     //apply each
