@@ -249,7 +249,7 @@ var GamePlayScene = function(game, stage)
     screen_btn = {x:0,y:0,w:canvas.width,h:canvas.height,click:
       function(evt)
       {
-        magnet.on = !magnet.on;
+        //magnet.on = !magnet.on;
         magnet.wx = worldSpaceX(cam,canv,evt.doX);
         magnet.wy = worldSpaceY(cam,canv,evt.doY);
         //mols[mols.length] = new Mol(worldSpaceX(cam,canv,evt.doX),worldSpaceY(cam,canv,evt.doY),worldSpaceX(cam,canv,evt.doX),worldSpaceY(cam,canv,evt.doY));

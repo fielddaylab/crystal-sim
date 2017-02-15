@@ -213,6 +213,8 @@ var setBox = function(obj, x,y,w,h)
 }
 
 //camera
+var screenSpaceX = function(cam, canv, x) { return (((( x)-cam.wx)+(cam.ww/2))/cam.ww)*canv.width;  }
+var screenSpaceY = function(cam, canv, y) { return ((((-y)+cam.wy)+(cam.wh/2))/cam.wh)*canv.height; }
 var screenSpace = function(cam, canv, obj)
 {
   //assumng xywh counterparts in world space (wx,wy,ww,wh,etc...)
@@ -230,7 +232,7 @@ var worldSpace = function(cam, canv, obj) //opposite of screenspace
 {
   obj.wx = ((obj.x/canv.width) -0.5)* cam.ww + cam.wx;
   obj.wy = ((obj.y/canv.height)-0.5)*-cam.wh + cam.wy;
-  obj.ww = (obj.w/canv.width)*cam.ww;
+  obj.ww = (obj.w/canv.width) *cam.ww;
   obj.wh = (obj.h/canv.height)*cam.wh;
 }
 
